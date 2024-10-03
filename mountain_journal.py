@@ -43,6 +43,16 @@ def ensure_app_data_folder():
     if not os.path.exists("app_data"):
         os.makedirs("app_data")
 
+# Function to create journal entry subfolders
+def create_journal_entry_folders(climb_dir):
+    journal_entries_dir = os.path.join(climb_dir, "journal_entries")
+    os.makedirs(journal_entries_dir, exist_ok=True)
+    
+    # Create subfolders for text, audio, and images
+    os.makedirs(os.path.join(journal_entries_dir, "text"), exist_ok=True)
+    os.makedirs(os.path.join(journal_entries_dir, "audio"), exist_ok=True)
+    os.makedirs(os.path.join(journal_entries_dir, "images"), exist_ok=True)
+
 # Function to list all climbs in app_data
 def list_climbs():
     ensure_app_data_folder()  # Ensure app_data exists
@@ -99,6 +109,7 @@ def get_climb_filename():
             climb_dir = os.path.join("app_data", f"{original_name}{counter}")
 
         os.makedirs(climb_dir)  # Create the climb directory
+        create_journal_entry_folders(climb_dir)  # Create subfolders for journal entries
         return climb_dir  # Return the directory path
 
 # Function to start a new climb
@@ -139,6 +150,9 @@ def log_entry():
         start_climb()
         active_climb = is_active_climb()  # After starting a climb, re-fetch the active climb
 
+    climb_dir = os.path.dirname(active_climb)
+    journal_entries_dir = os.path.join(climb_dir, "journal_entries")
+
     with open(active_climb, "r+") as f:
         climb = json.load(f)
 
@@ -148,34 +162,43 @@ def log_entry():
 
     if entry_type == "text":
         entry_data = input("Journal entry (text): ")
+        entry_file = os.path.join(journal_entries_dir, "text", f"{entry_time}.txt")
+        with open(entry_file, "w") as file:
+            file.write(entry_data)
+
         entry = {
             "type": "text",
             "time": entry_time,
             "location": entry_location,
-            "text": entry_data,
-            "audio": None,
-            "photo": None
+            "file_path": entry_file
         }
+
     elif entry_type == "audio":
         entry_data = input("Path to audio file (or placeholder): ")
+        entry_file = os.path.join(journal_entries_dir, "audio", f"{entry_time}.mp3")
+        with open(entry_file, "w") as file:
+            file.write(entry_data)  # Placeholder for now
+
         entry = {
             "type": "audio",
             "time": entry_time,
             "location": entry_location,
-            "text": None,
-            "audio": entry_data,
-            "photo": None
+            "file_path": entry_file
         }
+
     elif entry_type == "image":
         entry_data = input("Path to image file (or placeholder): ")
+        entry_file = os.path.join(journal_entries_dir, "images", f"{entry_time}.jpg")
+        with open(entry_file, "w") as file:
+            file.write(entry_data)  # Placeholder for now
+
         entry = {
             "type": "image",
             "time": entry_time,
             "location": entry_location,
-            "text": None,
-            "audio": None,
-            "photo": entry_data
+            "file_path": entry_file
         }
+
     else:
         print("Invalid entry type. Please choose 'text', 'audio', or 'image'.")
         return
